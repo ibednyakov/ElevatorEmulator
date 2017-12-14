@@ -11,6 +11,7 @@
 
 #include "Elevator.h"
 #include "EmuConfig.h"
+#include "CommandProcessor.h"
 
 int main(int argc, char* argv[])
 {
@@ -22,10 +23,18 @@ int main(int argc, char* argv[])
 		// 3. Create Elevator emulator thread;
 		// 4. Start commands listener.
 		// 5. Print usage instraction and CL prompt
-		while (1)
+		auto command_processor = ElevatorEmulator::EmuCommandProcessor::create_command_processor( emulator );
+
+		while (truel)
 		{
 			std::string input_string;
 			std::getline( std::cin, input_string );
+			try {
+				auto command = command_processor.parse_command( input_string );
+				command_processor.execute_command( command );
+			} catch (ElevatorEmulator::UnsupportedCommandException& e) {
+				// TODO: show usage and continue execution...
+			}
 		}
 	} catch (std::exception& e) {
 		std::cerr << "Error occurred: " << e.what() << std::endl;
@@ -35,6 +44,7 @@ int main(int argc, char* argv[])
 		std::cerr << "Fatal error occurred! Terminating the app..." << std::endl;
 		return -2;
 	}
+	std::cout << "Execution successfully completed. GoodBye!.." << std::endl;
 	return 0;
 }
 

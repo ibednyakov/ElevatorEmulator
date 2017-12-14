@@ -44,6 +44,13 @@ namespace ElevatorEmulator
 	class Elevator
 	{
 	public:
+		enum Action
+		{
+			Action_CloseDoors,
+			Action_OpenDoors,
+			Action_Move,
+		};
+
 		static std::shared_ptr<Elevator> create_elevator( unsigned floors_count, unsigned elevator_velocity );
 
 		Elevator( unsigned floors_count, unsigned elevator_velocity );
@@ -77,7 +84,7 @@ namespace ElevatorEmulator
 		unsigned                         current_floor;
 		bool                             in_progress_;
 
-		std::queue<Command>              commands_queue_;
+		std::queue<ICommand>             commands_queue_;
 		std::mutex                       mutex_;
 
 		static std::shared_ptr<Elevator> impl_;
