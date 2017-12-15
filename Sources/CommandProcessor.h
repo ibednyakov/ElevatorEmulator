@@ -29,7 +29,7 @@ namespace ElevatorEmulator
 		explicit EmuCommandProcessor( std::shared_ptr<Elevator> elevator ) : elevator_( elevator ) {}
 		EmuCommandProcessor() = delete;
 
-		std::queue<std::shared_ptr<ICommand>>                requests_;
+		//std::queue<std::unique_ptr<ICommand>>                requests_;
 		std::shared_ptr<Elevator>                            elevator_;
 	};
 

@@ -18,21 +18,45 @@ namespace ElevatorEmulator
 
 	std::unique_ptr<ICommand> EmuCommandProcessor::parse_command( const std::string& user_request )
 	{
-		const int command_id = 0;
+		int command_id = 0;
 		// TODO: parse command and try map it to supported commands...
+		const auto delimeter_pos = user_request.find( " " );
+		if (delimeter_pos != std::string::npos)
+		{
+			// TODO: the following design has to be improved later
+			const auto command_part = user_request.substr( 0, delimeter_pos );
+			if (command_part == "call")
+			{
+				command_id = UserCommand_CallElevator;
+			}
+			else if (command_part == "select")
+			{
+				command_id = UserCommand_SelectFloor;
+			}
+			else if (command_part == "exit")
+			{
+				command_id = UserCommand_SelectFloor;
+				auto command = std::make_unique<ExitEmulatorCommand>();
+				return command;
+			}
+		}
 
 		switch (command_id)
 		{
 		case UserCommand_CallElevator:
-			return std::make_unique<CallElevatorCommand>();
-			break;
-
+			{
+				auto command = std::make_unique<CallElevatorCommand>();
+				command->parse_command_parameters( user_request.substr( delimeter_pos ) );
+				return command;
+			}
 		case UserCommand_SelectFloor:
-			return std::make_unique<SelectFloorCommand>();
-			break;
-
+			{
+				auto command = std::make_unique<SelectFloorCommand>();
+				command->parse_command_parameters( user_request.substr( delimeter_pos ) );
+				return command;
+			}
 		default:
-			throw UnsupportedCommandException( " " );
+			throw UnsupportedCommandException( "Unsupported command specified!.." );
 		}
 	}
 
@@ -45,12 +69,15 @@ namespace ElevatorEmulator
 			switch (command->get_command_type())
 			{
 			case UserCommand_CallElevator:
-				elevator_->move_to( (static_cast<std::unique_ptr<CallElevatorCommand>>( command ))->get_user_floor() );
+				elevator_->get_to( command->get_parameter(), list_of_actions );
 				break;
 			case UserCommand_SelectFloor:
+				elevator_->select_floor( command->get_parameter(), list_of_actions );
+				break;
+			case UserCommand_Exit:
 				break;
 			}
-		} catch (Exception e) {
+		} catch (std::exception& e) {
 
 		}
 	}

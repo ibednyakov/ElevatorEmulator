@@ -13,13 +13,21 @@
 #include <string>
 #include <queue>
 #include <memory>
-#include <thread>
-#include <mutex>
 
-#include "EmuCommands.h"
+#include <mutex>
+#include <thread>
+
+//#include "EmuCommands.h"
 
 namespace ElevatorEmulator
 {
+
+	enum UserCommand
+	{
+		UserCommand_CallElevator,
+		UserCommand_SelectFloor,
+		UserCommand_Exit,
+	};
 
 	class InvalidFloorException : public std::exception
 	{
@@ -32,14 +40,16 @@ namespace ElevatorEmulator
 	class ActionDeprecatedException : public std::exception
 	{
 	public:
-		virtual const char* what() const noexcept { return "Invalid action due to "; }
+		virtual const char* what() const noexcept { return reason_.c_str(); }
 		virtual ~ActionDeprecatedException() throw() {}
+		explicit ActionDeprecatedException( const std::string& hint ) : reason_( hint ) {}
 
 	private:
 		std::string            reason_;
 	};
 
 
+	class ICommand;
 
 	class Elevator
 	{
@@ -51,44 +61,52 @@ namespace ElevatorEmulator
 			Action_Move,
 		};
 
-		static std::shared_ptr<Elevator> create_elevator( unsigned floors_count, unsigned elevator_velocity );
+		static std::shared_ptr<Elevator> create_elevator( unsigned floors_count, unsigned elevator_velocity, unsigned floor_height, unsigned time_of_doors_action );
 
-		Elevator( unsigned floors_count, unsigned elevator_velocity );
+		Elevator( unsigned floors_count, unsigned elevator_velocity, unsigned floor_height, unsigned time_of_doors_action );
+
+		~Elevator();
 
 		///
 		/// Floor key selected inside elevator handler
 		/// \param[in] floor: (key)
 		/// throw: InvalidFloorException
 		///
-		void select_floor( unsigned floor );
+		void select_floor( unsigned floor, const std::vector<Elevator::Action>& list_of_actions );
 
 		///
 		/// Calling the elevator to a specified floor
 		/// param[in] floor: (current user floor)
 		///
-		void get_to( unsigned floor );
+		void get_to( unsigned floor, const std::vector<Elevator::Action>& list_of_actions );
 
 
 	private:
 		Elevator() = delete;
 
-		bool move_to( unsigned floor );
+		bool move_up();
+		bool move_down();
 		bool open_doors() const;
 		bool close_doors() const;
 		bool validate_action_applicable( UserCommand command ) const;
-
+	void execute_common_part_async(unsigned floor,
+			const std::vector<Elevator::Action>& list_of_actions);
 
 		const unsigned                   floors_count_;
 		const unsigned                   elevator_velocity_ms_;
+		const unsigned                   floor_height_;
+		const unsigned                   time_of_doors_action_;
 
-		unsigned                         current_floor;
+		unsigned                         current_floor_;
 		bool                             in_progress_;
 
-		std::queue<ICommand>             commands_queue_;
-		std::mutex                       mutex_;
+//		std::queue<ICommand>             commands_queue_;
+		mutable std::mutex               mutex_;
+		std::thread                      executor_;
 
 		static std::shared_ptr<Elevator> impl_;
 	};
+
 }
 
 

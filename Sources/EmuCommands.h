@@ -13,12 +13,13 @@
 #include <memory>
 #include <queue>
 #include <vector>
+#include <exception>
 
 
 namespace ElevatorEmulator
 {
 
-	class UnsupportedCommandException : public std::runtime_error
+	class UnsupportedCommandException : public std::exception
 	{
 	public:
 		virtual const char* what() const noexcept { return hint_.c_str(); }
@@ -31,11 +32,7 @@ namespace ElevatorEmulator
 		std::string hint_;
 	};
 
-	enum UserCommand
-	{
-		UserCommand_CallElevator,
-		UserCommand_SelectFloor,
-	};
+
 
 	class ICommand
 	{
@@ -52,35 +49,57 @@ namespace ElevatorEmulator
 		virtual UserCommand get_command_type() const =0;
 
 		virtual void parse_command_parameters( const std::string& parameters ) =0;
+
+		///
+		/// \brief Returns command parameter. For harder implementations can be modified to tuple
+		/// \return unsigned parameter value
+		///
+		virtual unsigned get_parameter() const { return 0; }
 	};
 
 
 	class CallElevatorCommand : public ICommand
 	{
 	public:
+		~CallElevatorCommand() {}
+
 		virtual void get_actions_list( std::vector<Elevator::Action>& actions );
 		virtual UserCommand get_command_type() const { return UserCommand_CallElevator; }
-
 		virtual void parse_command_parameters( const std::string& parameters );
 
-		unsigned get_user_floor() const { return user_floor_; }
+		unsigned get_parameter() const { return user_floor_; }
 
 	private:
-		unsigned                        user_floor_;
+		unsigned                               user_floor_;
+		static std::vector<Elevator::Action>   actions_;
 	};
 
 
 	class SelectFloorCommand : public ICommand
 	{
 	public:
+		~SelectFloorCommand() {}
+
 		virtual void get_actions_list( std::vector<Elevator::Action>& actions );
 		virtual UserCommand get_command_type() const { return UserCommand_SelectFloor; }
 		virtual void parse_command_parameters( const std::string& parameters );
 
-		unsigned get_target_floor() const { return target_floor_; }
+		unsigned get_parameter() const { return target_floor_; }
 
 	private:
 		unsigned                        target_floor_;
+		static std::vector<Elevator::Action>   actions_;
+	};
+
+
+	class ExitEmulatorCommand : public ICommand
+	{
+	public:
+		~ExitEmulatorCommand() {}
+
+		virtual void get_actions_list( std::vector<Elevator::Action>& actions ) {}
+		virtual UserCommand get_command_type() const { return UserCommand_Exit; }
+		virtual void parse_command_parameters( const std::string& parameters ) {}
 	};
 
 }
