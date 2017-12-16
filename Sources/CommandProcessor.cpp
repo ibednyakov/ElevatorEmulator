@@ -21,6 +21,7 @@ namespace ElevatorEmulator
 		int command_id = 0;
 		// TODO: parse command and try map it to supported commands...
 		const auto delimeter_pos = user_request.find( " " );
+
 		if (delimeter_pos != std::string::npos)
 		{
 			// TODO: the following design has to be improved later
@@ -33,12 +34,14 @@ namespace ElevatorEmulator
 			{
 				command_id = UserCommand_SelectFloor;
 			}
-			else if (command_part == "exit")
-			{
-				command_id = UserCommand_SelectFloor;
-				auto command = std::make_unique<ExitEmulatorCommand>();
-				return command;
-			}
+			else
+				throw UnsupportedCommandException( "Unsupported command specified!.." );
+		}
+		else if (user_request == "exit")
+		{
+			command_id = UserCommand_SelectFloor;
+			auto command = std::make_unique<ExitEmulatorCommand>();
+			return command;
 		}
 
 		switch (command_id)

@@ -80,7 +80,6 @@ namespace ElevatorEmulator
 		///
 		void get_to( unsigned floor, const std::vector<Elevator::Action>& list_of_actions );
 
-
 	private:
 		Elevator() = delete;
 
@@ -89,7 +88,7 @@ namespace ElevatorEmulator
 		bool open_doors() const;
 		bool close_doors() const;
 		bool validate_action_applicable( UserCommand command ) const;
-	void execute_common_part_async(unsigned floor,
+		void execute_common_part_async(unsigned floor,
 			const std::vector<Elevator::Action>& list_of_actions);
 
 		const unsigned                   floors_count_;
@@ -100,7 +99,6 @@ namespace ElevatorEmulator
 		unsigned                         current_floor_;
 		bool                             in_progress_;
 
-//		std::queue<ICommand>             commands_queue_;
 		mutable std::mutex               mutex_;
 		std::thread                      executor_;
 

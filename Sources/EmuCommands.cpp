@@ -16,7 +16,8 @@ std::vector<Elevator::Action> SelectFloorCommand::actions_ = { Elevator::Action_
 
 void CallElevatorCommand::parse_command_parameters( const std::string& parameters )
 {
-	user_floor_ = std::atoi( parameters.c_str() );
+	if (!parameters.empty())
+		user_floor_ = std::atoi( parameters.c_str() );
 }
 
 void CallElevatorCommand::get_actions_list( std::vector<Elevator::Action>& actions )
@@ -26,7 +27,8 @@ void CallElevatorCommand::get_actions_list( std::vector<Elevator::Action>& actio
 
 void SelectFloorCommand::parse_command_parameters( const std::string& parameters )
 {
-	target_floor_ = std::atoi( parameters.c_str() );
+	if (!parameters.empty())
+		target_floor_ = std::atoi( parameters.c_str() );
 }
 
 void SelectFloorCommand::get_actions_list( std::vector<Elevator::Action>& actions )

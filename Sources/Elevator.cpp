@@ -48,28 +48,31 @@ namespace ElevatorEmulator
 		auto floors_delta = floor - current_floor_;
 		std::cout << "  Floors delta is " << floors_delta << std::endl;
 		executor_ = std::thread([list_of_actions, this, &floors_delta]() {
-			for (auto action: list_of_actions)
+			if (floors_delta)
 			{
-				switch (action)
+				for (auto action: list_of_actions)
 				{
-				case Action_CloseDoors:
-					close_doors();
-					break;
-				case Action_OpenDoors:
-					open_doors();
-					break;
-				case Action_Move:
-					while (floors_delta) {
-						if (floors_delta < 0) {
-							move_down();
-							++floors_delta;
-						} else
-						if (floors_delta > 0) {
-							move_up();
-							--floors_delta;
+					switch (action)
+					{
+					case Action_CloseDoors:
+						close_doors();
+						break;
+					case Action_OpenDoors:
+						open_doors();
+						break;
+					case Action_Move:
+						while (floors_delta) {
+							if (floors_delta < 0) {
+								move_down();
+								++floors_delta;
+							} else
+							if (floors_delta > 0) {
+								move_up();
+								--floors_delta;
+							}
 						}
+						break;
 					}
-					break;
 				}
 			}
 			std::cout << "Ready!.." << std::endl;
