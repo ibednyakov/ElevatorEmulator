@@ -22,12 +22,16 @@ int main(int argc, char* argv[])
 	try {
 		// 1. Read input parameters;
 		auto config = EmuConfig::parse_config( argc, argv );
-		auto emulator = Elevator::create_elevator( config.get_floors_count(), config.get_elevator_velocity_ms(), config.get_floor_height(), config.get_time_of_doors_action() );
+
 		// 2. Validate parameters.
 		// 3. Create Elevator emulator thread;
+		auto emulator = Elevator::create_elevator( config.get_floors_count(), config.get_elevator_velocity_ms(), config.get_floor_height(), config.get_time_of_doors_action() );
+
 		// 4. Start commands listener.
-		// 5. Print usage instraction and CL prompt
 		auto command_processor = EmuCommandProcessor::create_command_processor( emulator );
+
+		// 5. Print usage instruction and CL prompt
+		print_usage();
 
 		while (true)
 		{
@@ -36,8 +40,10 @@ int main(int argc, char* argv[])
 
 			try {
 				auto command = command_processor.parse_command( input_string );
+
 				if (command->get_command_type() == UserCommand_Exit)
 					break;
+
 				command_processor.execute_command( std::move( command ) );
 
 			} catch (UnsupportedCommandException& e) {

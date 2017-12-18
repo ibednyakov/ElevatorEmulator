@@ -26,6 +26,28 @@ namespace ElevatorEmulator
 		return instance;
 	}
 
+	const char* Elevator::command_pretty_name( UserCommand command )
+	{
+		switch (command)
+		{
+		case UserCommand_CallElevator: return "Call-elevator command";
+		case UserCommand_Exit: return "Exit emulator";
+		case UserCommand_SelectFloor: return "Select floor to move to command";
+		default: return "Unrecognized command";
+		}
+	}
+
+	const char* Elevator::action_pretty_name( Action action )
+	{
+		switch (action)
+		{
+		case Action_CloseDoors: return "Close Doors action";
+		case Action_Move: return "Move action";
+		case Action_OpenDoors: return "Select floor to move to command";
+		default: return "Unrecognized action";
+		}
+	}
+
 	Elevator::Elevator( unsigned floors_count, unsigned elevator_velocity, unsigned floor_height, unsigned time_of_doors_action )
 		: floors_count_( floors_count )
 		, elevator_velocity_ms_( elevator_velocity )
@@ -54,7 +76,7 @@ namespace ElevatorEmulator
 				auto floors_counter = floors_delta;
 				for (auto action: list_of_actions)
 				{
-					std::cout << "  processing action " << action << std::endl;
+					std::cout << "  processing action " << action_pretty_name( action ) << std::endl;
 					switch (action)
 					{
 					case Action_CloseDoors:
@@ -78,8 +100,8 @@ namespace ElevatorEmulator
 					}
 				}
 			}
-			std::cout << "Ready!.." << std::endl;
 			std::lock_guard<std::recursive_mutex> lock(mutex_);
+			std::cout << "Ready!.. Current floor is " << current_floor_ << std::endl;
 			in_progress_ = false;
 		});
 	}
@@ -89,9 +111,9 @@ namespace ElevatorEmulator
 		if (floor > floors_count_)
 			throw InvalidFloorException();
 
-		std::lock_guard<std::recursive_mutex> lock( mutex_ );
-		if (impl_ && impl_->validate_action_applicable( UserCommand_SelectFloor ) )
+		if (validate_action_applicable( UserCommand_SelectFloor ) )
 		{
+			std::cout << "Waiting for emulator thread execution finished!.." << std::endl;
 			if (executor_.joinable())
 				executor_.join();
 
@@ -99,6 +121,7 @@ namespace ElevatorEmulator
 		}
 		else
 		{
+			std::cerr << "  Not passed validation!" << std::endl;
 			throw ActionDeprecatedException( "Validation not passed!" );
 		}
 	}
@@ -109,9 +132,9 @@ namespace ElevatorEmulator
 		if (floor > floors_count_)
 			throw InvalidFloorException();
 
-		std::lock_guard<std::recursive_mutex> lock( mutex_ );
-		if (impl_ && impl_->validate_action_applicable( UserCommand_CallElevator ))
+		if (validate_action_applicable( UserCommand_CallElevator ))
 		{
+			std::cout << "Waiting for emulator thread execution finished!.." << std::endl;
 			if (executor_.joinable())
 				executor_.join();
 
@@ -119,6 +142,7 @@ namespace ElevatorEmulator
 		}
 		else
 		{
+			std::cerr << "  Not passed validation!" << std::endl;
 			throw ActionDeprecatedException( "Validation not passed!" );
 		}
 	}
@@ -137,7 +161,7 @@ namespace ElevatorEmulator
 		{
 			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			std::cout << std::put_time( std::localtime( &t ), "%T" ) << "  Passed " << current_floor_ << " floor " << std::endl;
-			++impl_->current_floor_;
+			++current_floor_;
 		}
 		return true;
 	}
@@ -154,7 +178,7 @@ namespace ElevatorEmulator
 		{
 			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			std::cout << std::put_time( std::localtime( &t ), "%T" ) << "  Passed " << current_floor_ << " floor " << std::endl;
-			--impl_->current_floor_;
+			--current_floor_;
 		}
 		return true;
 	}
@@ -188,14 +212,16 @@ namespace ElevatorEmulator
 
 	bool Elevator::validate_action_applicable( UserCommand command ) const
 	{
-		std::cout << "  validating for " << command << std::endl;
+		std::lock_guard<std::recursive_mutex> lock( mutex_ );
+		std::cout << "  validating for " << command_pretty_name( command ) << " InProgress status is " << in_progress_ << std::endl;
+
 		switch (command)
 		{
 		case UserCommand_CallElevator:
 			break; // applicable always
 		case UserCommand_SelectFloor:
 			// TODO: conditions have to be clarified!
-			if (impl_->in_progress_)
+			if (in_progress_)
 				return false;
 			break;
 		default:

@@ -63,6 +63,9 @@ namespace ElevatorEmulator
 
 		static std::shared_ptr<Elevator> create_elevator( unsigned floors_count, unsigned elevator_velocity, unsigned floor_height, unsigned time_of_doors_action );
 
+		static const char* command_pretty_name( UserCommand command );
+		static const char* action_pretty_name( Action action );
+
 		Elevator( unsigned floors_count, unsigned elevator_velocity, unsigned floor_height, unsigned time_of_doors_action );
 
 		~Elevator();
