@@ -16,7 +16,7 @@ std::map<std::string, EmuConfig::parameter_description_type> EmuConfig::paramete
 		{"floors_count", {"count of floors in the building: ", MinFloorsCount, MaxFloorsCount, ""}},
 		{"floor_height", {"each floor height in [m]:", MinFloorHeight, MaxFloorHeight, ""}},
 		{"doors_action_time", {"time spent to open/close elevator doors [s]:", MinDoorsActionTime, MaxDoorsActionTime, ""}},
-		{"elevator_valocity", {"elevator velocity [m/s]", MinElevatorVelocity, MaxElevatorVelocity, ""}}
+		{"elevator_velocity", {"elevator velocity [m/s]", MinElevatorVelocity, MaxElevatorVelocity, ""}}
 };
 
 EmuConfig& EmuConfig::parse_config( int argc, char* argv[] )
@@ -28,6 +28,7 @@ EmuConfig& EmuConfig::parse_config( int argc, char* argv[] )
 	} catch (std::exception& e) {
 		std::cerr << e.what();
 		instance.print_help();
+		throw;
 	}
 	return instance;
 }
@@ -81,7 +82,7 @@ void EmuConfig::parse_config_parameters( int argc, char* argv[] )
 		}
 	}
 
-	// TODO: can be improved later...
+	// TODO: design can be improved later...
 	for (auto parameter_itr : parameter_descs_)
 	{
 		if (parameter_itr.first == "floors_count")
@@ -90,7 +91,7 @@ void EmuConfig::parse_config_parameters( int argc, char* argv[] )
 			floor_height_ = std::atoi( std::get<3>( parameter_itr.second ).c_str() );
 		else if (parameter_itr.first == "doors_action_time")
 			time_of_doors_action_ = std::atoi( std::get<3>( parameter_itr.second ).c_str() );
-		else if (parameter_itr.first == "elevator_valocity")
+		else if (parameter_itr.first == "elevator_velocity")
 			elevator_velocity_ms_ = std::atoi( std::get<3>( parameter_itr.second ).c_str() );
 	}
 }

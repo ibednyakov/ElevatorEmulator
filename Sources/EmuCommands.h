@@ -46,8 +46,16 @@ namespace ElevatorEmulator
 		///
 		virtual void get_actions_list( std::vector<Elevator::Action>& actions ) =0;
 
+		///
+		/// \brief Gets the type of the command
+		/// \return UserCommand type
+		///
 		virtual UserCommand get_command_type() const =0;
 
+		///
+		/// \brief Parses commands' parameters from a passed string
+		/// \param[in] parameters: the string containing commands parameters
+		///
 		virtual void parse_command_parameters( const std::string& parameters ) =0;
 
 		///
@@ -87,7 +95,7 @@ namespace ElevatorEmulator
 		unsigned get_parameter() const { return target_floor_; }
 
 	private:
-		unsigned                        target_floor_;
+		unsigned                               target_floor_;
 		static std::vector<Elevator::Action>   actions_;
 	};
 

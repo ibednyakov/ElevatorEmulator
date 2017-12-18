@@ -99,7 +99,7 @@ namespace ElevatorEmulator
 		unsigned                         current_floor_;
 		bool                             in_progress_;
 
-		mutable std::mutex               mutex_;
+		mutable std::recursive_mutex     mutex_;
 		std::thread                      executor_;
 
 		static std::shared_ptr<Elevator> impl_;

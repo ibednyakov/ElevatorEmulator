@@ -37,6 +37,7 @@ namespace ElevatorEmulator
 
 	Elevator::~Elevator()
 	{
+		std::cout << "  Emulator dtor..." << std::endl;
 		if (executor_.joinable())
 			executor_.join();
 	}
@@ -45,13 +46,15 @@ namespace ElevatorEmulator
 			const std::vector<Elevator::Action>& list_of_actions)
 	{
 		in_progress_ = true;
-		auto floors_delta = floor - current_floor_;
+		int floors_delta = floor - current_floor_;
 		std::cout << "  Floors delta is " << floors_delta << std::endl;
-		executor_ = std::thread([list_of_actions, this, &floors_delta]() {
+		executor_ = std::thread([list_of_actions, this, floors_delta]() {
 			if (floors_delta)
 			{
+				auto floors_counter = floors_delta;
 				for (auto action: list_of_actions)
 				{
+					std::cout << "  processing action " << action << std::endl;
 					switch (action)
 					{
 					case Action_CloseDoors:
@@ -61,14 +64,14 @@ namespace ElevatorEmulator
 						open_doors();
 						break;
 					case Action_Move:
-						while (floors_delta) {
-							if (floors_delta < 0) {
+						while (floors_counter) {
+							if (floors_counter < 0) {
 								move_down();
-								++floors_delta;
+								++floors_counter;
 							} else
-							if (floors_delta > 0) {
+							if (floors_counter > 0) {
 								move_up();
-								--floors_delta;
+								--floors_counter;
 							}
 						}
 						break;
@@ -76,7 +79,7 @@ namespace ElevatorEmulator
 				}
 			}
 			std::cout << "Ready!.." << std::endl;
-			std::lock_guard<std::mutex> lock(mutex_);
+			std::lock_guard<std::recursive_mutex> lock(mutex_);
 			in_progress_ = false;
 		});
 	}
@@ -86,10 +89,13 @@ namespace ElevatorEmulator
 		if (floor > floors_count_)
 			throw InvalidFloorException();
 
-		std::lock_guard<std::mutex> lock( mutex_ );
-		if (validate_action_applicable( UserCommand_SelectFloor ) )
+		std::lock_guard<std::recursive_mutex> lock( mutex_ );
+		if (impl_ && impl_->validate_action_applicable( UserCommand_SelectFloor ) )
 		{
-			execute_common_part_async(floor, list_of_actions);
+			if (executor_.joinable())
+				executor_.join();
+
+			execute_common_part_async( floor, list_of_actions);
 		}
 		else
 		{
@@ -103,10 +109,13 @@ namespace ElevatorEmulator
 		if (floor > floors_count_)
 			throw InvalidFloorException();
 
-		std::lock_guard<std::mutex> lock( mutex_ );
+		std::lock_guard<std::recursive_mutex> lock( mutex_ );
 		if (impl_ && impl_->validate_action_applicable( UserCommand_CallElevator ))
 		{
-			execute_common_part_async(floor, list_of_actions);
+			if (executor_.joinable())
+				executor_.join();
+
+			execute_common_part_async( floor, list_of_actions );
 		}
 		else
 		{
@@ -120,13 +129,13 @@ namespace ElevatorEmulator
 
 		unsigned delay_us = 0;
 		{
-			std::lock_guard<std::mutex> lock( mutex_ );
+			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			delay_us = 1000 * floor_height_ / elevator_velocity_ms_ + 100 * (floor_height_ % elevator_velocity_ms_);
 		}
 		std::this_thread::sleep_for( std::chrono::milliseconds( delay_us ) );
 		std::time_t t = std::time( nullptr );
 		{
-			std::lock_guard<std::mutex> lock( mutex_ );
+			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			std::cout << std::put_time( std::localtime( &t ), "%T" ) << "  Passed " << current_floor_ << " floor " << std::endl;
 			++impl_->current_floor_;
 		}
@@ -137,13 +146,13 @@ namespace ElevatorEmulator
 	{
 		unsigned delay_us = 0;
 		{
-			std::lock_guard<std::mutex> lock( mutex_ );
+			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			delay_us = 1000 * floor_height_ / elevator_velocity_ms_ + 100 * (floor_height_ % elevator_velocity_ms_);
 		}
 		std::this_thread::sleep_for( std::chrono::milliseconds( delay_us ) );
 		std::time_t t = std::time( nullptr );
 		{
-			std::lock_guard<std::mutex> lock( mutex_ );
+			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			std::cout << std::put_time( std::localtime( &t ), "%T" ) << "  Passed " << current_floor_ << " floor " << std::endl;
 			--impl_->current_floor_;
 		}
@@ -154,7 +163,7 @@ namespace ElevatorEmulator
 	{
 		unsigned time_of_doors_action = 0;
 		{
-			std::lock_guard<std::mutex> lock( mutex_ );
+			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			time_of_doors_action = time_of_doors_action_;
 		}
 		std::this_thread::sleep_for( std::chrono::seconds( time_of_doors_action ) );
@@ -167,7 +176,7 @@ namespace ElevatorEmulator
 	{
 		unsigned time_of_doors_action = 0;
 		{
-			std::lock_guard<std::mutex> lock( mutex_ );
+			std::lock_guard<std::recursive_mutex> lock( mutex_ );
 			time_of_doors_action = time_of_doors_action_;
 		}
 		std::this_thread::sleep_for( std::chrono::seconds( time_of_doors_action ) );
@@ -179,9 +188,11 @@ namespace ElevatorEmulator
 
 	bool Elevator::validate_action_applicable( UserCommand command ) const
 	{
+		std::cout << "  validating for " << command << std::endl;
 		switch (command)
 		{
-		case UserCommand_CallElevator: break; // applicable always
+		case UserCommand_CallElevator:
+			break; // applicable always
 		case UserCommand_SelectFloor:
 			// TODO: conditions have to be clarified!
 			if (impl_->in_progress_)

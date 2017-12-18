@@ -7,6 +7,9 @@
 
 #include "CommandProcessor.h"
 
+#include <stdlib.h>
+#include <iostream>
+
 namespace ElevatorEmulator
 {
 
@@ -19,6 +22,10 @@ namespace ElevatorEmulator
 	std::unique_ptr<ICommand> EmuCommandProcessor::parse_command( const std::string& user_request )
 	{
 		int command_id = 0;
+
+		if (user_request.empty())
+			throw UnsupportedCommandException( "Unsupported command specified!.." );
+
 		// TODO: parse command and try map it to supported commands...
 		const auto delimeter_pos = user_request.find( " " );
 
@@ -81,7 +88,7 @@ namespace ElevatorEmulator
 				break;
 			}
 		} catch (std::exception& e) {
-
+			std::cerr << e.what() << std::endl;
 		}
 	}
 

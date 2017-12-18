@@ -15,6 +15,7 @@
 #include "EmuConfig.h"
 
 using namespace ElevatorEmulator;
+void print_usage();
 
 int main(int argc, char* argv[])
 {
@@ -32,6 +33,7 @@ int main(int argc, char* argv[])
 		{
 			std::string input_string;
 			std::getline( std::cin, input_string );
+
 			try {
 				auto command = command_processor.parse_command( input_string );
 				if (command->get_command_type() == UserCommand_Exit)
@@ -39,12 +41,7 @@ int main(int argc, char* argv[])
 				command_processor.execute_command( std::move( command ) );
 
 			} catch (UnsupportedCommandException& e) {
-
-				// TODO: show usage and continue execution...
-				std::cout << "  Emulator usage:" << std::endl;
-				std::cout << "  call <floor>: calls elevator to the specified floor" << std::endl;
-				std::cout << "  select <floor>: floor selection imitation - moves elevator to the specified floor" << std::endl;
-				std::cout << "  exit: exits emulator" << std::endl;
+				print_usage();
 			}
 		}
 	} catch (std::exception& e) {
@@ -57,6 +54,15 @@ int main(int argc, char* argv[])
 	}
 	std::cout << "Execution successfully completed. GoodBye!.." << std::endl;
 	return 0;
+}
+
+
+void print_usage()
+{
+	std::cout << "  Emulator usage:" << std::endl;
+	std::cout << "  call <floor>: calls elevator to the specified floor" << std::endl;
+	std::cout << "  select <floor>: floor selection imitation - moves elevator to the specified floor" << std::endl;
+	std::cout << "  exit: exits emulator" << std::endl;
 }
 
 
